@@ -27,6 +27,11 @@ class TLDetector(object):
         self.camera_image = None
         self.lights = []
 
+        self.state = TrafficLight.UNKNOWN
+        self.last_state = TrafficLight.UNKNOWN
+        self.last_wp = -1
+        self.state_count = 0
+
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -38,7 +43,7 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb) #, queue_size=1, buff_size=5000000)
+        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size=1)#, buff_size=5000000)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -49,10 +54,6 @@ class TLDetector(object):
         self.light_classifier = TLClassifier()
         self.listener = tf.TransformListener()
 
-        self.state = TrafficLight.UNKNOWN
-        self.last_state = TrafficLight.UNKNOWN
-        self.last_wp = -1
-        self.state_count = 0
 
         # rospy.spin()
 
@@ -229,7 +230,7 @@ class TLDetector(object):
                     closest_trafficlight_waypoint = stop_line_waypoint
                     closest_stop_line_waypoint = stop_line_waypoint
 
-        rospy.loginfo('distance to next traffic light is {}, index={}'.format(closest_dist, closest_stop_line_waypoint))
+        # rospy.loginfo('distance to next traffic light is {}, index={}'.format(closest_dist, closest_stop_line_waypoint))
 
         index_2_label = {TrafficLight.UNKNOWN:'unknow',
                          TrafficLight.GREEN:'green',
